@@ -9,25 +9,39 @@ var server = app.listen(process.env.PORT, function () {
 });
 
 app.get('/', function (req, res) {
-  
   var city = req.query.city;
   var state = req.query.state;
+  var key = req.query.key;
   var handleCoords = function(err, data){ getWeather(data.lat, data.lon, handleWeather) };
   var handleWeather = function(err, data){ formatWeather(data, handleMessage) };
-  var handleMessage = function(message){ res.send(message)};
+  var handleMessage = function(message){ sendHook(message, key)};
   
   getCoords(city, state, handleCoords);
-  
+  res.send('complete');
 });
+
+var sendHook = function(message, key) {
+  var apiUrl = 'https://maker.ifttt.com/trigger/weather/with/key/' + key;
+  var requestParams = {
+    'url': apiUrl,
+    // 'proxy': 'http://62.201.200.17:80',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.86 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+    },
+    json:true,
+    body: { 'value1': message }
+  };
+  request(requestParams);
+}
 
 var formatWeather = function(weather, cb){
   var messageItems = [
-      'Here is your weather report. ',
-      'The current temperature is ',
+      'Its ' ,
       weather.currentobservation.Temp,
-      ' degrees, weather is currently described as ',
+      ' degrees with ',
       weather.currentobservation.Weather,
-      '. The weather will be ',
+      '.Today will be ',
       weather.data.text[0]
     ];
   
